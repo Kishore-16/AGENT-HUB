@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  agents       Agent[]
+  ratings      Rating[]
+
+  @@map("Users")
+}
+
+model Agent {
+  id           String   @id @default(uuid())
+  name         String
+  description  String
+  category     String
+  apiUrl       String
+  tags         String[]
+  inputFormat   String
+  outputFormat  String
+  systemPrompt  String   @default("")
+  version       String   @default("1.0.0")
+  rating       Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  creatorId    String
+  creator      User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  runs         AgentRun[]
+  ratings      Rating[]
+
+  @@index([category])
+  @@index([createdAt])
+  @@map("Agents")
+}
+
+model AgentRun {
+  id           String   @id @default(uuid())
+  agentId      String
+  input        String
+  output       String
+  responseTime Int
+  createdAt    DateTime @default(now())
+  agent        Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([createdAt])
+  @@map("AgentRuns")
+}
+
+model Rating {
+  id        String   @id @default(uuid())
+  agentId   String
+  userId    String
+  score     Int
+  createdAt DateTime @default(now())
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, userId])
+  @@index([agentId])
+  @@index([userId])
+  @@map("Ratings")
+}
