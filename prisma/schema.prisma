@@ -15,7 +15,14 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   agents       Agent[]
+  agentRuns    AgentRun[]
+  agentVersions AgentVersion[] @relation("AgentVersionAuthor")
+  packs        AgentPack[] @relation("PackCreator")
+  packInstalls PackInstall[]
   ratings      Rating[]
+  workflowRuns WorkflowRun[]
+  promptTemplates PromptTemplate[]
+  promptVotes  PromptVote[]
 
   @@map("Users")
 }
@@ -30,32 +37,182 @@ model Agent {
   inputFormat   String
   outputFormat  String
   systemPrompt  String   @default("")
-  version       String   @default("1.0.0")
+  version       String   @default("v1")
+  currentVersionNumber Int @default(1)
   rating       Float    @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   creatorId    String
+  remixedFromAgentId String?
   creator      User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  remixedFromAgent Agent? @relation("AgentRemix", fields: [remixedFromAgentId], references: [id], onDelete: SetNull)
+  remixes      Agent[]  @relation("AgentRemix")
   runs         AgentRun[]
   ratings      Rating[]
+  versions     AgentVersion[]
+  packItems    AgentPackItem[]
+  promptTemplates PromptTemplate[]
 
   @@index([category])
   @@index([createdAt])
+  @@index([creatorId])
   @@map("Agents")
+}
+
+model AgentVersion {
+  id           String   @id @default(uuid())
+  agentId       String
+  versionNumber Int
+  versionLabel  String
+  name          String
+  description   String
+  category      String
+  apiUrl        String
+  tags          String[]
+  inputFormat   String
+  outputFormat  String
+  systemPrompt  String   @default("")
+  createdAt     DateTime @default(now())
+  createdById   String?
+  agent         Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdBy     User?    @relation("AgentVersionAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  runs          AgentRun[]
+
+  @@unique([agentId, versionNumber])
+  @@index([agentId, createdAt])
+  @@map("AgentVersions")
 }
 
 model AgentRun {
   id           String   @id @default(uuid())
   agentId      String
+  agentVersionId String?
+  workflowRunId String?
+  userId       String?
   input        String
   output       String
   responseTime Int
+  status       ExecutionStatus @default(SUCCESS)
+  errorMessage String?
+  stepIndex    Int?
   createdAt    DateTime @default(now())
   agent        Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentVersion AgentVersion? @relation(fields: [agentVersionId], references: [id], onDelete: SetNull)
+  workflowRun  WorkflowRun? @relation(fields: [workflowRunId], references: [id], onDelete: SetNull)
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([agentId])
   @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([workflowRunId])
   @@map("AgentRuns")
+}
+
+model WorkflowRun {
+  id                  String        @id @default(uuid())
+  userId              String?
+  packId              String?
+  mode                WorkflowMode
+  title               String
+  input               String
+  finalOutput         String
+  durationMs          Int
+  status              ExecutionStatus @default(SUCCESS)
+  errorMessage        String?
+  webhookUrl          String?
+  webhookStatus       WebhookStatus @default(NOT_REQUESTED)
+  webhookResponseCode Int?
+  webhookError        String?
+  metadata            Json?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  user                User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  pack                AgentPack?    @relation(fields: [packId], references: [id], onDelete: SetNull)
+  steps               AgentRun[]
+
+  @@index([userId, createdAt])
+  @@index([packId, createdAt])
+  @@map("WorkflowRuns")
+}
+
+model AgentPack {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  creatorId   String
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  creator     User     @relation("PackCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  items       AgentPackItem[]
+  installs    PackInstall[]
+  workflowRuns WorkflowRun[]
+  promptTemplates PromptTemplate[]
+
+  @@index([creatorId, createdAt])
+  @@map("AgentPacks")
+}
+
+model AgentPackItem {
+  id       String @id @default(uuid())
+  packId    String
+  agentId   String
+  agentVersionNumber Int
+  position  Int
+  pack      AgentPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  agent     Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([packId, position])
+  @@index([agentId])
+  @@map("AgentPackItems")
+}
+
+model PackInstall {
+  id        String   @id @default(uuid())
+  packId     String
+  userId     String
+  createdAt  DateTime @default(now())
+  pack       AgentPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([packId, userId])
+  @@index([userId, createdAt])
+  @@map("PackInstalls")
+}
+
+model PromptTemplate {
+  id          String   @id @default(uuid())
+  title       String
+  goal        String
+  prompt      String
+  description String   @default("")
+  creatorId   String
+  agentId     String?
+  packId      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  creator     User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  agent       Agent?   @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  pack        AgentPack? @relation(fields: [packId], references: [id], onDelete: SetNull)
+  votes       PromptVote[]
+
+  @@index([createdAt])
+  @@index([agentId])
+  @@index([packId])
+  @@map("PromptTemplates")
+}
+
+model PromptVote {
+  id               String   @id @default(uuid())
+  promptTemplateId String
+  userId           String
+  createdAt        DateTime @default(now())
+  promptTemplate   PromptTemplate @relation(fields: [promptTemplateId], references: [id], onDelete: Cascade)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([promptTemplateId, userId])
+  @@index([userId, createdAt])
+  @@map("PromptVotes")
 }
 
 model Rating {
@@ -71,4 +228,22 @@ model Rating {
   @@index([agentId])
   @@index([userId])
   @@map("Ratings")
+}
+
+enum ExecutionStatus {
+  SUCCESS
+  ERROR
+  EMPTY
+}
+
+enum WorkflowMode {
+  SINGLE
+  PACK
+  BENCHMARK
+}
+
+enum WebhookStatus {
+  NOT_REQUESTED
+  SUCCESS
+  FAILED
 }

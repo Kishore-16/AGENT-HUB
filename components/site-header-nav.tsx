@@ -7,8 +7,11 @@ type NavUser = { name: string; email: string } | null;
 
 const NAV_LINKS = [
   { href: "/agents", label: "Agents" },
+  { href: "/packs", label: "Packs" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/playground", label: "Playground" },
+  { href: "/prompts", label: "Prompts" },
+  { href: "/history", label: "History" },
   { href: "/developer-dashboard", label: "Dashboard" },
   { href: "/submit-agent", label: "Submit" },
 ];
@@ -18,44 +21,57 @@ export function SiteHeaderNav({ user }: { user: NavUser }) {
 
   return (
     <>
-      {/* Desktop nav */}
-      <nav className="hidden items-center gap-4 text-sm text-slate-700 md:flex">
-        {NAV_LINKS.map((link) => (
-          <Link key={link.href} href={link.href} className="hover:text-slate-900">
-            {link.label}
-          </Link>
-        ))}
+      <nav className="hidden flex-1 items-center justify-end gap-3 lg:flex">
+        <div className="flex flex-wrap items-center gap-1 rounded-full border border-white/10 bg-black/20 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="rounded-full px-3 py-2 text-[0.68rem] font-medium uppercase tracking-[0.24em] text-slate-400 hover:bg-white/5 hover:text-white"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
 
         {user ? (
-          <>
-            <Link href="/profile" className="font-medium hover:text-slate-900">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/profile"
+              className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 hover:border-emerald-300/25 hover:text-white"
+            >
               {user.name}
             </Link>
-            <form action="/api/auth/logout" method="post" className="ml-1">
+            <form action="/api/auth/logout" method="post">
               <button
                 type="submit"
-                className="rounded-md bg-slate-900 px-3 py-1.5 text-white hover:bg-slate-800"
+                className="rounded-full border border-emerald-300/20 bg-emerald-400/15 px-4 py-2 text-sm font-medium text-emerald-100 hover:bg-emerald-400/20"
               >
                 Logout
               </button>
             </form>
-          </>
+          </div>
         ) : (
-          <>
-            <Link href="/login" className="rounded-md border border-slate-300 px-3 py-1.5 hover:bg-slate-50">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300 hover:border-white/20 hover:text-white"
+            >
               Login
             </Link>
-            <Link href="/signup" className="rounded-md bg-slate-900 px-3 py-1.5 text-white hover:bg-slate-800">
+            <Link
+              href="/signup"
+              className="rounded-full border border-emerald-300/20 bg-emerald-400/15 px-4 py-2 text-sm font-medium text-emerald-100 hover:bg-emerald-400/20"
+            >
               Sign up
             </Link>
-          </>
+          </div>
         )}
       </nav>
 
-      {/* Mobile hamburger */}
       <button
         onClick={() => setOpen(!open)}
-        className="rounded-md p-2 text-slate-700 hover:bg-slate-100 md:hidden"
+        className="rounded-2xl border border-white/10 bg-white/5 p-2.5 text-slate-200 hover:border-emerald-300/25 hover:bg-white/10 lg:hidden"
         aria-label="Toggle menu"
       >
         {open ? (
@@ -69,35 +85,34 @@ export function SiteHeaderNav({ user }: { user: NavUser }) {
         )}
       </button>
 
-      {/* Mobile drawer */}
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 border-b border-slate-200 bg-white px-4 py-3 shadow-md md:hidden">
+        <div className="absolute left-4 right-4 top-full z-50 mt-3 rounded-3xl border border-white/10 bg-[#050b16]/95 px-4 py-4 shadow-[0_32px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:hidden">
           <nav className="flex flex-col gap-1 text-sm">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="rounded-md px-3 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                className="rounded-2xl px-3 py-2.5 text-slate-300 hover:bg-white/5 hover:text-white"
               >
                 {link.label}
               </Link>
             ))}
 
-            <div className="mt-2 flex flex-col gap-1 border-t border-slate-100 pt-2">
+            <div className="mt-3 flex flex-col gap-2 border-t border-white/10 pt-3">
               {user ? (
                 <>
                   <Link
                     href="/profile"
                     onClick={() => setOpen(false)}
-                    className="rounded-md px-3 py-2 text-slate-700 hover:bg-slate-50"
+                    className="rounded-2xl border border-white/10 px-3 py-2.5 text-slate-200 hover:border-emerald-300/25 hover:text-white"
                   >
                     Profile ({user.name})
                   </Link>
                   <form action="/api/auth/logout" method="post">
                     <button
                       type="submit"
-                      className="w-full rounded-md bg-slate-900 px-3 py-2 text-left text-white hover:bg-slate-800"
+                      className="w-full rounded-2xl border border-emerald-300/20 bg-emerald-400/15 px-3 py-2.5 text-left font-medium text-emerald-100 hover:bg-emerald-400/20"
                     >
                       Logout
                     </button>
@@ -108,14 +123,14 @@ export function SiteHeaderNav({ user }: { user: NavUser }) {
                   <Link
                     href="/login"
                     onClick={() => setOpen(false)}
-                    className="rounded-md border border-slate-300 px-3 py-2 text-slate-700 hover:bg-slate-50"
+                    className="rounded-2xl border border-white/10 px-3 py-2.5 text-slate-300 hover:border-white/20 hover:text-white"
                   >
                     Login
                   </Link>
                   <Link
                     href="/signup"
                     onClick={() => setOpen(false)}
-                    className="rounded-md bg-slate-900 px-3 py-2 text-center text-white hover:bg-slate-800"
+                    className="rounded-2xl border border-emerald-300/20 bg-emerald-400/15 px-3 py-2.5 text-center font-medium text-emerald-100 hover:bg-emerald-400/20"
                   >
                     Sign up
                   </Link>

@@ -65,7 +65,7 @@ export function RatingWidget({
 
   return (
     <div className="mt-5">
-      <p className="text-sm font-semibold text-slate-900">Rating</p>
+      <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white">Rating</p>
 
       <div className="mt-2 flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
@@ -85,19 +85,19 @@ export function RatingWidget({
           </button>
         ))}
 
-        <span className="ml-2 text-sm text-slate-500">
+        <span className="ml-2 text-sm text-slate-400">
           {currentRating.toFixed(1)} / 5 &middot; {currentTotal} rating{currentTotal !== 1 ? "s" : ""}
         </span>
       </div>
 
       {!isLoggedIn && (
-        <p className="mt-1 text-xs text-slate-400">
-          <a href="/login" className="underline hover:text-slate-600">Log in</a> to rate this agent
+        <p className="mt-1 text-xs text-slate-500">
+          <a href="/login" className="underline hover:text-white">Log in</a> to rate this agent
         </p>
       )}
 
       {currentScore > 0 && isLoggedIn && (
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-slate-500">
           Your rating: {currentScore} star{currentScore !== 1 ? "s" : ""}
         </p>
       )}

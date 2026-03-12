@@ -3,8 +3,11 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
+import { COMMON_AGENT_FORMATS } from "@/lib/agent-formats";
+
 type EditAgentFormProps = {
   agentId: string;
+  currentVersionLabel: string;
   defaultValues: {
     name: string;
     description: string;
@@ -17,7 +20,7 @@ type EditAgentFormProps = {
   };
 };
 
-export function EditAgentForm({ agentId, defaultValues }: EditAgentFormProps) {
+export function EditAgentForm({ agentId, currentVersionLabel, defaultValues }: EditAgentFormProps) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -61,6 +64,10 @@ export function EditAgentForm({ agentId, defaultValues }: EditAgentFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
+      <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900">
+        Current live version: <span className="font-semibold">{currentVersionLabel}</span>. Saving this form publishes a new version and keeps the old one accessible for existing workflows.
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-1">
           <label htmlFor="name" className="text-sm font-medium text-slate-700">Agent Name</label>
@@ -128,6 +135,7 @@ export function EditAgentForm({ agentId, defaultValues }: EditAgentFormProps) {
           <input
             id="inputFormat"
             name="inputFormat"
+            list="agent-format-options"
             defaultValue={defaultValues.inputFormat}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
           />
@@ -138,11 +146,20 @@ export function EditAgentForm({ agentId, defaultValues }: EditAgentFormProps) {
           <input
             id="outputFormat"
             name="outputFormat"
+            list="agent-format-options"
             defaultValue={defaultValues.outputFormat}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
           />
         </div>
       </div>
+
+      <datalist id="agent-format-options">
+        {COMMON_AGENT_FORMATS.map((format) => (
+          <option key={format.value} value={format.value}>
+            {format.label}
+          </option>
+        ))}
+      </datalist>
 
       <div className="flex flex-col gap-1">
         <label htmlFor="systemPrompt" className="text-sm font-medium text-slate-700">

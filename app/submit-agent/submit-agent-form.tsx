@@ -3,7 +3,29 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 
-export function SubmitAgentForm() {
+import { COMMON_AGENT_FORMATS } from "@/lib/agent-formats";
+
+type SubmitAgentFormProps = {
+  initialValues?: {
+    name: string;
+    description: string;
+    category: string;
+    apiUrl: string;
+    tags: string[];
+    inputFormat: string;
+    outputFormat: string;
+    systemPrompt: string;
+    remixedFromAgentId?: string;
+  };
+  remixSource?: {
+    id: string;
+    name: string;
+    version: string;
+    creatorName: string;
+  } | null;
+};
+
+export function SubmitAgentForm({ initialValues, remixSource = null }: SubmitAgentFormProps) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [successId, setSuccessId] = useState<string | null>(null);
@@ -28,6 +50,7 @@ export function SubmitAgentForm() {
       inputFormat: String(formData.get("inputFormat") ?? ""),
       outputFormat: String(formData.get("outputFormat") ?? ""),
       systemPrompt: String(formData.get("systemPrompt") ?? ""),
+      remixedFromAgentId: String(formData.get("remixedFromAgentId") ?? "") || undefined,
     };
 
     const response = await fetch("/api/agents", {
@@ -82,6 +105,14 @@ export function SubmitAgentForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6">
+      {remixSource ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Remixing <span className="font-semibold">{remixSource.name}</span> from {remixSource.creatorName}. Your variant starts from {remixSource.version} and publishes as a new agent you own.
+        </div>
+      ) : null}
+
+      <input type="hidden" name="remixedFromAgentId" value={initialValues?.remixedFromAgentId ?? ""} />
+
       <div className="grid gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-1">
           <label htmlFor="name" className="text-sm font-medium text-slate-700">Agent Name</label>
@@ -90,6 +121,7 @@ export function SubmitAgentForm() {
             name="name"
             required
             placeholder="e.g. Research Assistant"
+            defaultValue={initialValues?.name}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
           />
         </div>
@@ -101,6 +133,7 @@ export function SubmitAgentForm() {
             name="category"
             required
             placeholder="e.g. Productivity"
+            defaultValue={initialValues?.category}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
           />
         </div>
@@ -115,6 +148,7 @@ export function SubmitAgentForm() {
           minLength={20}
           rows={4}
           placeholder="Describe what your agent does (at least 20 characters)"
+          defaultValue={initialValues?.description}
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
       </div>
@@ -128,6 +162,7 @@ export function SubmitAgentForm() {
           name="systemPrompt"
           rows={5}
           placeholder="Provide the system prompt that instructs your agent how to behave..."
+          defaultValue={initialValues?.systemPrompt}
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
         <p className="text-xs text-slate-500">This prompt will be sent to the agent on every run to set its behaviour.</p>
@@ -140,6 +175,7 @@ export function SubmitAgentForm() {
           name="tags"
           required
           placeholder="research, productivity, summarization"
+          defaultValue={initialValues?.tags.join(", ")}
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
         <p className="text-xs text-slate-500">Separate tags with commas</p>
@@ -153,6 +189,7 @@ export function SubmitAgentForm() {
           type="url"
           required
           placeholder="https://your-agent-api.com/run"
+          defaultValue={initialValues?.apiUrl}
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
         />
       </div>
@@ -163,7 +200,9 @@ export function SubmitAgentForm() {
           <input
             id="inputFormat"
             name="inputFormat"
+            list="agent-format-options"
             placeholder="e.g. Plain text prompt"
+            defaultValue={initialValues?.inputFormat ?? "plain_text"}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
           />
         </div>
@@ -172,11 +211,21 @@ export function SubmitAgentForm() {
           <input
             id="outputFormat"
             name="outputFormat"
+            list="agent-format-options"
             placeholder="e.g. JSON / Plain text"
+            defaultValue={initialValues?.outputFormat ?? "plain_text"}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
           />
         </div>
       </div>
+
+      <datalist id="agent-format-options">
+        {COMMON_AGENT_FORMATS.map((format) => (
+          <option key={format.value} value={format.value}>
+            {format.label}
+          </option>
+        ))}
+      </datalist>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
@@ -185,7 +234,7 @@ export function SubmitAgentForm() {
         disabled={loading}
         className="rounded-md bg-cyan-700 px-4 py-2 font-medium text-white hover:bg-cyan-800 disabled:opacity-60"
       >
-        {loading ? "Submitting..." : "Submit Agent"}
+        {loading ? "Submitting..." : remixSource ? "Publish Remix" : "Submit Agent"}
       </button>
     </form>
   );

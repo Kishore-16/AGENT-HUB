@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f7fb;
-  --foreground: #0f172a;
+  --background: #030711;
+  --background-elevated: rgba(6, 16, 31, 0.86);
+  --background-strong: rgba(4, 11, 22, 0.94);
+  --foreground: #f3fffb;
+  --muted: #8aa3b3;
+  --muted-strong: #b5cad6;
+  --accent: #58f0be;
+  --accent-strong: #18c690;
+  --accent-soft: rgba(88, 240, 190, 0.14);
+  --border: rgba(131, 170, 198, 0.18);
+  --border-strong: rgba(131, 170, 198, 0.28);
 }
 
 @theme inline {
@@ -12,8 +21,210 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  color-scheme: dark;
+}
+
+* {
+  border-color: var(--border);
+}
+
 body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
   background: var(--background);
   color: var(--foreground);
+  background-image:
+    radial-gradient(circle at top left, rgba(88, 240, 190, 0.12), transparent 28%),
+    radial-gradient(circle at top right, rgba(103, 148, 255, 0.16), transparent 24%),
+    linear-gradient(180deg, rgba(6, 14, 27, 0.94), rgba(3, 7, 17, 1));
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+  isolation: isolate;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(88, 240, 190, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88, 240, 190, 0.08) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(180deg, rgba(255, 255, 255, 0.6), transparent 85%);
+  opacity: 0.22;
+}
+
+::selection {
+  background: rgba(88, 240, 190, 0.25);
+  color: var(--foreground);
+}
+
+a,
+button,
+input,
+textarea,
+select {
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+input,
+textarea,
+select {
+  background: rgba(7, 18, 34, 0.9);
+  border-color: var(--border-strong);
+  color: var(--foreground);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6d8797;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(88, 240, 190, 0.4), 0 0 0 4px rgba(88, 240, 190, 0.1);
+}
+
+.bg-white {
+  background-color: var(--background-elevated) !important;
+}
+
+.bg-white\/90 {
+  background-color: rgba(4, 11, 22, 0.82) !important;
+}
+
+.bg-slate-50 {
+  background-color: rgba(8, 20, 38, 0.8) !important;
+}
+
+.bg-slate-100 {
+  background-color: rgba(13, 27, 48, 0.88) !important;
+}
+
+.bg-slate-200 {
+  background-color: rgba(18, 36, 60, 0.95) !important;
+}
+
+.bg-slate-900 {
+  background-color: rgba(7, 18, 34, 0.94) !important;
+}
+
+.bg-cyan-50 {
+  background-color: var(--accent-soft) !important;
+}
+
+.bg-indigo-50 {
+  background-color: rgba(117, 134, 255, 0.16) !important;
+}
+
+.bg-rose-50 {
+  background-color: rgba(255, 120, 168, 0.16) !important;
+}
+
+.bg-amber-100 {
+  background-color: rgba(255, 207, 112, 0.18) !important;
+}
+
+.bg-orange-100 {
+  background-color: rgba(255, 156, 77, 0.16) !important;
+}
+
+.border-slate-100 {
+  border-color: rgba(131, 170, 198, 0.12) !important;
+}
+
+.border-slate-200 {
+  border-color: var(--border) !important;
+}
+
+.border-slate-300 {
+  border-color: var(--border-strong) !important;
+}
+
+.border-amber-300 {
+  border-color: rgba(255, 207, 112, 0.28) !important;
+}
+
+.border-cyan-300,
+.hover\:border-cyan-300:hover {
+  border-color: rgba(88, 240, 190, 0.34) !important;
+}
+
+.text-slate-900 {
+  color: var(--foreground) !important;
+}
+
+.text-slate-700 {
+  color: var(--muted-strong) !important;
+}
+
+.text-slate-600 {
+  color: #99b0bd !important;
+}
+
+.text-slate-500 {
+  color: var(--muted) !important;
+}
+
+.text-slate-400 {
+  color: #6f8797 !important;
+}
+
+.text-slate-300 {
+  color: #5e7382 !important;
+}
+
+.text-cyan-700,
+.text-indigo-700,
+.text-rose-700 {
+  color: var(--accent) !important;
+}
+
+.text-amber-700,
+.text-amber-900,
+.text-orange-700 {
+  color: #ffc978 !important;
+}
+
+.bg-cyan-700 {
+  background-color: var(--accent-strong) !important;
+}
+
+.hover\:bg-cyan-800:hover {
+  background-color: #12ad7f !important;
+}
+
+.hover\:bg-slate-50:hover {
+  background-color: rgba(10, 23, 42, 0.92) !important;
+}
+
+.hover\:bg-slate-100:hover {
+  background-color: rgba(14, 29, 52, 0.96) !important;
+}
+
+.hover\:bg-slate-800:hover {
+  background-color: rgba(12, 27, 47, 0.98) !important;
+}
+
+.hover\:text-slate-600:hover,
+.hover\:text-slate-900:hover {
+  color: var(--foreground) !important;
+}
+
+.shadow-sm,
+.shadow-md,
+.shadow-lg {
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
 }

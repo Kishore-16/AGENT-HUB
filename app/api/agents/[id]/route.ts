@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { buildVersionSnapshot, getVersionLabel } from "@/lib/agent-versioning";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -11,21 +12,41 @@ type Context = {
 export async function GET(_: Request, { params }: Context) {
   const { id } = await params;
 
-  const agent = await prisma.agent.findUnique({
-    where: { id },
-    include: {
-      creator: {
-        select: { name: true, email: true },
+  const [agent, totalRuns, failedRuns] = await prisma.$transaction([
+    prisma.agent.findUnique({
+      where: { id },
+      include: {
+        creator: {
+          select: { name: true, email: true },
+        },
+        versions: {
+          select: {
+            id: true,
+            versionNumber: true,
+            versionLabel: true,
+            createdAt: true,
+            createdBy: { select: { name: true } },
+          },
+          orderBy: { versionNumber: "desc" },
+        },
+        _count: { select: { runs: true, ratings: true, remixes: true } },
       },
-      _count: { select: { runs: true, ratings: true } },
-    },
-  });
+    }),
+    prisma.agentRun.count({ where: { agentId: id } }),
+    prisma.agentRun.count({ where: { agentId: id, status: { in: ["ERROR", "EMPTY"] } } }),
+  ]);
 
   if (!agent) {
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ agent });
+  return NextResponse.json({
+    agent: {
+      ...agent,
+      failureRate: totalRuns === 0 ? 0 : failedRuns / totalRuns,
+      successRate: totalRuns === 0 ? 1 : (totalRuns - failedRuns) / totalRuns,
+    },
+  });
 }
 
 const updateAgentSchema = z.object({
@@ -47,7 +68,15 @@ export async function PATCH(req: Request, { params }: Context) {
 
   const { id } = await params;
 
-  const existing = await prisma.agent.findUnique({ where: { id }, select: { creatorId: true } });
+  const existing = await prisma.agent.findUnique({
+    where: { id },
+    include: {
+      versions: {
+        select: { id: true, versionNumber: true },
+      },
+    },
+  });
+
   if (!existing) {
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
@@ -61,9 +90,54 @@ export async function PATCH(req: Request, { params }: Context) {
     return NextResponse.json({ error: "Invalid update payload" }, { status: 400 });
   }
 
-  const agent = await prisma.agent.update({
-    where: { id },
-    data: parsed.data,
+  const nextVersionNumber = existing.currentVersionNumber + 1;
+  const nextVersionLabel = getVersionLabel(nextVersionNumber);
+  const mergedAgent = {
+    name: parsed.data.name ?? existing.name,
+    description: parsed.data.description ?? existing.description,
+    category: parsed.data.category ?? existing.category,
+    apiUrl: parsed.data.apiUrl ?? existing.apiUrl,
+    tags: parsed.data.tags ?? existing.tags,
+    inputFormat: parsed.data.inputFormat ?? existing.inputFormat,
+    outputFormat: parsed.data.outputFormat ?? existing.outputFormat,
+    systemPrompt: parsed.data.systemPrompt ?? existing.systemPrompt,
+  };
+
+  const hasCurrentSnapshot = existing.versions.some(
+    (version) => version.versionNumber === existing.currentVersionNumber,
+  );
+
+  const agent = await prisma.$transaction(async (tx) => {
+    if (!hasCurrentSnapshot) {
+      await tx.agentVersion.create({
+        data: {
+          agentId: existing.id,
+          versionNumber: existing.currentVersionNumber,
+          versionLabel: existing.version,
+          ...buildVersionSnapshot(existing, user.id),
+        },
+      });
+    }
+
+    const updatedAgent = await tx.agent.update({
+      where: { id },
+      data: {
+        ...mergedAgent,
+        version: nextVersionLabel,
+        currentVersionNumber: nextVersionNumber,
+      },
+    });
+
+    await tx.agentVersion.create({
+      data: {
+        agentId: existing.id,
+        versionNumber: nextVersionNumber,
+        versionLabel: nextVersionLabel,
+        ...buildVersionSnapshot(mergedAgent, user.id),
+      },
+    });
+
+    return updatedAgent;
   });
 
   return NextResponse.json({ agent });

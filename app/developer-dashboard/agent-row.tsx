@@ -8,12 +8,14 @@ type AgentRowProps = {
   id: string;
   name: string;
   category: string;
+  version: string;
   rating: number;
   runCount: number;
   ratingCount: number;
+  failureRate: number;
 };
 
-export function AgentRow({ id, name, category, rating, runCount, ratingCount }: AgentRowProps) {
+export function AgentRow({ id, name, category, version, rating, runCount, ratingCount, failureRate }: AgentRowProps) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
 
@@ -34,13 +36,18 @@ export function AgentRow({ id, name, category, rating, runCount, ratingCount }: 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h2 className="truncate text-lg font-semibold text-slate-900">{name}</h2>
-          <p className="text-sm text-slate-500">{category}</p>
+          <p className="text-sm text-slate-500">{category} · {version}</p>
         </div>
 
         <div className="flex shrink-0 items-center gap-6 text-sm text-slate-600">
           <div className="text-center">
             <p className="text-lg font-semibold text-slate-900">{runCount}</p>
             <p className="text-xs text-slate-500">runs</p>
+          </div>
+
+          <div className="text-center">
+            <p className="text-lg font-semibold text-slate-900">{(failureRate * 100).toFixed(0)}%</p>
+            <p className="text-xs text-slate-500">failure</p>
           </div>
 
           <div className="text-center">

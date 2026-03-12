@@ -28,6 +28,7 @@ export default async function EditAgentPage({ params }: EditAgentPageProps) {
       inputFormat: true,
       outputFormat: true,
       systemPrompt: true,
+      version: true,
       creatorId: true,
     },
   });
@@ -44,6 +45,7 @@ export default async function EditAgentPage({ params }: EditAgentPageProps) {
       <div className="mt-6">
         <EditAgentForm
           agentId={agent.id}
+          currentVersionLabel={agent.version}
           defaultValues={{
             name: agent.name,
             description: agent.description,

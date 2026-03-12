@@ -5,13 +5,13 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: nexuslab-postgres
+    container_name: Agent_hub-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: nexuslab_dev
+      POSTGRES_DB: Agent_Hub_Db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,27 +22,27 @@ services:
 
   neo4j:
     image: neo4j:5.15-community
-    container_name: nexuslab-neo4j
+    container_name: Agent_hub-neo4j
     environment:
-      NEO4J_AUTH: neo4j/nexuslab123
+      NEO4J_AUTH: neo4j/AgentHub123
       NEO4J_PLUGINS: '["apoc"]'
     ports:
-      - "7474:7474"  # HTTP
-      - "7687:7687"  # Bolt
+      - "7476:7474"  # HTTP
+      - "7686:7687"  # Bolt
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
     healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u neo4j -p nexuslab123 'RETURN 1'"]
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p AgentHub123 'RETURN 1'"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: nexuslab-redis
+    container_name: Agent_hub-redis
     ports:
-      - "6379:6379"
+      - "6370:6379"
     volumes:
       - redis_data:/data
     healthcheck:
